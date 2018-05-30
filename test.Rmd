@@ -1,0 +1,88 @@
+---
+title: "Female Cancer incidences in Coimbatore"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(rgdal)
+library(shiny)
+library(leaflet)
+library(highcharter)
+library(maptools)
+library(htmltools)
+data<-readShapePoints("finalpointmerge.shp") 
+data1<-data.frame(data)
+xy = data1[c("coords.x1", "coords.x2")] # retrieve coordinates as data.frame
+class(data1)
+coordinates(data1) = c("coords.x1", "coords.x2")
+coordinates(data1)
+class(data1)
+```
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+### chart 1
+This interactive map shows the individual locations of the female cancer incidences in the study area 
+
+Column {data-width=600}
+-----------------------------------------------------------------------
+### chart 2
+```{r}
+output$Map <- renderLeaflet({
+    leaflet(data1) %>% addTiles() %>% addCircleMarkers(data = data1, lng = data1$coords.x1 , lat = data1$coords.x2,color="red",stroke=F,fillOpacity=0.5,
+               layerId = ~ID, popup = ~htmlEscape(POINT), radius=~(data1$TOTAL/5)) 
+
+  })
+
+observeEvent(input$Map_marker_click, {
+    p <- input$Map_marker_click
+	if(p$id=="Selected"){
+		leafletProxy("Map") %>% removeMarker(layerId="Selected")
+	} else {
+		leafletProxy("Map") %>% setView(lng=p$lng, lat=p$lat, input$Map_zoom) %>% addCircleMarkers(p$lng, p$lat, radius=10, color="black", fillColor="orange", fillOpacity=1, opacity=1, stroke=TRUE, layerId="Selected")
+	}
+})
+
+leafletOutput('Map')  
+
+```
+
+### chart 3
+
+```{r}
+
+click_marker <- eventReactive(input$Map_marker_click, {
+
+  x <- input$Map_marker_click
+
+  return(x$id)
+
+
+})
+
+data_for_chart <- reactive({
+
+  return(data1[data1$ID == click_marker(), ])
+
+})
+
+output$chart <- renderHighchart({
+
+  highchart() %>%
+ hc_add_theme(hc_theme_ft())%>%
+  hc_chart(type = 'column') %>%
+  hc_xAxis(categories=list(data_for_chart()$POINT))%>%
+  hc_add_series(name="breast",data=data_for_chart()$BREASTF,color="red")%>%
+  hc_add_series(name="gastro",data=data_for_chart()$GASTROF, color="blue")%>%
+  hc_add_series(name="gyaeno",data=data_for_chart()$GYNECF,color="violet")%>%
+hc_add_series(name="head&neck",data=data_for_chart()$HEADNECF,color="yellow")%>%
+hc_add_series(name="respiratory",data=data_for_chart()$RESPIROF,color="green")
+})
+
+highchartOutput('chart')
+options(shiny.sanitize.errors = TRUE)
