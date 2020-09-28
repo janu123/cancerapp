@@ -5,9 +5,8 @@ account: jananiapps
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2903963
-bundleId: 3680022
+bundleId: 3680133
 url: https://jananiapps.shinyapps.io/cancer_app/
-when: 1601316161.4388
+when: 1601318221.38372
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: finalpointmerge.dbf|finalpointmerge.sbn|finalpointmerge.shx|finalpointmerge.sbx|finalpointmerge.shp
